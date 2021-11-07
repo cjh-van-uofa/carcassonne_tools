@@ -36,16 +36,9 @@ def display_map(game, win, size):
                spac  - the spacing between the tiles, a tiny bit more than the radius
     """
 
-    min_x = max_x = min_y = max_y = 0
-    for (x,y) in game.get_all_coords():
-        if x < min_x:
-            min_x = x
-        if x > max_x:
-            max_x = x
-        if y < min_y:
-            min_y = y
-        if y > max_y:
-            max_y = y
+    x_range, y_range = list(zip(*game.get_all_coords()))
+    min_x, max_x = min(0, *x_range), max(0, *x_range)
+    min_y, max_y = min(0, *y_range), max(0, *y_range)
 
     wid_tiles = max_x-min_x+1
     hei_tiles = max_y-min_y+1
