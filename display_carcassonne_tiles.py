@@ -5,14 +5,14 @@
    allows you to browse all of the tiles.
 """
 
-import sys
 import math
-SQRT_2 = math.sqrt(2)
-
-import graphics
+import sys
+from collections import namedtuple
 
 import carcassonne_tile
+import graphics
 
+SQRT_2 = math.sqrt(2)
 
 
 def display_tile(tile, win, center, radius):
@@ -49,19 +49,25 @@ def display_tile(tile, win, center, radius):
         edges.append(edge)
 
     cr = tile.has_crossroads()
-
+    # THIS IS MADE BY CJH_VAN if anyone wants to implement a monastery I will create a separate README for that purpose.
+    try:
+        monastery = tile.has_monastery()
+        assert isinstance(monast, bool)
+    except (AttributeError, AssertionError):
+        print("OOPS seems like this has not be implemented correctly yet")
+        monastery = False
 
     win.rectangle(center_x-radius, center_y-radius, 2*radius,2*radius, fill="white")
 
     # NOTE: These represent *ANGLES*, not the Caracassonne side-indices!
-    E  = 0
+    # E  = 0
     NE = math.pi / 4
     N  = math.pi / 2
     NW = math.pi * 3/4
-    W  = math.pi
-    SW = math.pi * 5/4
-    S  = math.pi * 3/2
-    SE = math.pi * 7/4
+    # W  = math.pi
+    # SW = math.pi * 5/4
+    # S  = math.pi * 3/2
+    # SE = math.pi * 7/4
 
     for i in range(4):
         # we draw each side using the same code, by adding a rotation-specific
@@ -102,10 +108,9 @@ def display_tile(tile, win, center, radius):
         y5 = center_y - (radius/2) * SQRT_2 * math.sin(NE+rot)
 
         # special case 1 - shallow trapezoid?
+        # Fixed the condition to make more condensed.
         if edges[i] == "city" and \
-           tile.city_connects(i, (i+1)%4) == False and \
-           tile.city_connects(i, (i+2)%4) == False and \
-           tile.city_connects(i, (i+3)%4) == False:
+           not any(tile.city_connects(i, (i+_)%4) for _ in range(1,4)):
             # we adjust the points 4,5 "north" (rotated) by a little bit
             x4 += (radius/10) * math.cos(N+rot)
             y4 -= (radius/10) * math.sin(N+rot)
@@ -137,8 +142,8 @@ def display_tile(tile, win, center, radius):
 
     # draw the roads (if any) *LAST*, so that they will overwrite the rest of
     # the drawn elements.
-    for i in range(4):
-        if edges[i] == "grass+road":
+    for i, edge in enumerate(edges):
+        if edge == "grass+road":
             rot = i * (-math.pi/2)
 
             x1 = center_x
@@ -152,28 +157,33 @@ def display_tile(tile, win, center, radius):
     # is there a crossroads to draw?  That's a black square on top of the roads.
     if cr:
         win.rectangle(center_x-radius/10,center_y-radius/10, radius/5,radius/5, fill="black")
-
+    elif monastery:
+        win.rectangle(center_x-radius/6, center_y-radius/6, radius/3, radius/3, fill="red3")
 
 
 def get_tile_array():
-    retval = [("Tile 01", carcassonne_tile.tile01),
-              ("Tile 02", carcassonne_tile.tile02),
-              ("Tile 03", carcassonne_tile.tile03),
-              ("Tile 04", carcassonne_tile.tile04)]
+    tile_info = namedtuple("tile_info", ["name", "tile"])
+    retval = [tile_info("Tile 01", carcassonne_tile.tile01),
+              tile_info("Tile 02", carcassonne_tile.tile02),
+              tile_info("Tile 03", carcassonne_tile.tile03),
+              tile_info("Tile 04", carcassonne_tile.tile04)]
 
     try:
-        retval.append( ("Tile 05", carcassonne_tile.tile05) )
-        retval.append( ("Tile 06", carcassonne_tile.tile06) )
-        retval.append( ("Tile 07", carcassonne_tile.tile07) )
-        retval.append( ("Tile 08", carcassonne_tile.tile08) )
-        retval.append( ("Tile 09", carcassonne_tile.tile09) )
-        retval.append( ("Tile 10", carcassonne_tile.tile10) )
-        retval.append( ("Tile 11", carcassonne_tile.tile11) )
-        retval.append( ("Tile 12", carcassonne_tile.tile12) )
-        retval.append( ("Tile 13", carcassonne_tile.tile13) )
-        retval.append( ("Tile 14", carcassonne_tile.tile14) )
-        retval.append( ("Tile 15", carcassonne_tile.tile15) )
-        retval.append( ("Tile 16", carcassonne_tile.tile16) )
+        retval.append( tile_info("Tile 05", carcassonne_tile.tile05) )
+        retval.append( tile_info("Tile 06", carcassonne_tile.tile06) )
+        retval.append( tile_info("Tile 07", carcassonne_tile.tile07) )
+        retval.append( tile_info("Tile 08", carcassonne_tile.tile08) )
+        retval.append( tile_info("Tile 09", carcassonne_tile.tile09) )
+        retval.append( tile_info("Tile 10", carcassonne_tile.tile10) )
+        retval.append( tile_info("Tile 11", carcassonne_tile.tile11) )
+        retval.append( tile_info("Tile 12", carcassonne_tile.tile12) )
+        retval.append( tile_info("Tile 13", carcassonne_tile.tile13) )
+        retval.append( tile_info("Tile 14", carcassonne_tile.tile14) )
+        retval.append( tile_info("Tile 15", carcassonne_tile.tile15) )
+        retval.append( tile_info("Tile 16", carcassonne_tile.tile16) )
+        retval.append( tile_info("Tile 17", carcassonne_tile.tile17) )
+        retval.append( tile_info("Tile 18", carcassonne_tile.tile18) )
+        retval.append( tile_info("Tile 19", carcassonne_tile.tile19) )
     except:
         print(f"WARNING: Only {len(retval)} tiles could be found.")
 
@@ -207,11 +217,9 @@ def main():
 
 
     def draw():
-        name = tiles[cur_indx][0]
-        tile = tiles[cur_indx][1]
         win.clear()
-        display_tile(tile, win, (200,200), 200)
-        win.text(175,410, name)
+        display_tile(tiles[cur_indx].tile, win, (200,200), 200)
+        win.text(175,410, tiles[cur_indx].name)
 
 
     win.set_keyboard_action(key_handler)
